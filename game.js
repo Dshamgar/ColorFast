@@ -262,6 +262,7 @@ function Controller() {
 	// turn % 2 = 0 ==> turn is red
 	// turn % 2 = 1 ==> turn is blue
 	this.turn = 0;
+	this.mongoGameId;
 
 	this.currentHexSelected = undefined;
 	this.moved = false;
@@ -277,6 +278,10 @@ function Controller() {
 	this.winningColor;
 	this.incrementTurn = function () {
 		this.turn++;
+	}
+
+	this.setMongoGameId = function (id) {
+		this.mongoGameId = id;
 	}
 
 	this.checkColumn = function (columnIndex) {
@@ -586,6 +591,9 @@ function Controller() {
 				// increment to the next turn
 				controller.incrementTurn();
 
+				// call rest service here
+				controller.updateStateInDB(controller.mongoGameId);
+
 				// alert players to pass the game
 				var currTurn = (parseInt(controller.turn) % 2) + 1;
 				alert("Please pass game to player " + ((parseInt(controller.turn) % 2) + 1));
@@ -599,70 +607,6 @@ function Controller() {
 				// reset the player move indicators
 				controller.moved = false;
 				controller.movedYellow = false;
-
-				//console.log(board);
-				//console.log(this);
-				//console.log("board instanceof Board: " + (board instanceof Board));
-				//console.log("controller instanceof Controller: " + (controller instanceof Controller));
-				//console.log(JSON.stringify(board, ["columns", "hexes", "raphaelHex", "data", "color", "pendingColor", "attrs", "fill"]));
-				//console.log(JSON.stringify(controller, ["defaultColor"]));
-
-				var invocation = new XMLHttpRequest();
-				var url = 'http://localhost:8080/cfast-status';
-				var jsonString = JSON.stringify(board, ["columns", "hexes", "raphaelHex",
-					"data", "color", "pendingColor",
-					"attrs", "fill"]);
-
-				console.log("jsonString: " + jsonString);
-				invocation.open('POST', url, true);
-				invocation.setRequestHeader('Content-type', 'application/json; charset=utf-8');
-
-				invocation.onreadystatechange = function () {
-					if (this.readyState == 4 && this.status == 200) {
-						var newBoard = JSON.parse(this.responseText);
-						console.log("newBoard: " + JSON.stringify(newBoard));
-						newBoard.columns.forEach((cl, i) => {
-							//console.log("columns[" + i + "]:" + JSON.stringify(cl));
-							cl.hexes.forEach((hx, j) => {
-								if (null != hx) {
-									board.columns[i].hexes[j].color = hx.color;
-									board.columns[i].hexes[j].raphaelHex.attr("fill", hx.raphaelHex.attrs.fill);
-									board.columns[i].hexes[j].raphaelHex.data("color", hx.color);
-								}
-							});
-						});
-					}
-				};
-
-				invocation.send(jsonString);
-
-				/*$.ajax({
-					type: 'GET',
-					url: "http://localhost:8080/cfast-status",
-					//contentType: "application/json",
-					contentType: "text/plain",
-				}).then(function (data) {
-					$('.greeting-id').append(data.id);
-					$('.greeting-content').append(data.content);
-				}); */
-
-				/*
-				$.ajax({
-					type: 'PUT',
-					url: 'https://localhost:8080/cfast-status/',
-					contentType: 'application/json',
-					//dataType: 'jsonp',
-					data: JSON.stringify(JSON.stringify(board, ["columns", "hexes", "raphaelHex",
-						"data", "color", "pendingColor",
-						"attrs", "fill"])), // access in body
-				}).done(function () {
-					console.log('SUCCESS');
-				}).fail(function (msg) {
-					console.log('FAIL');
-				}).always(function (msg) {
-					console.log('ALWAYS');
-				});
-				*/
 
 			} else { // if game over print game over message
 				var str = controller.spectrum[controller.winningColor] + " WINS!!!";
@@ -681,7 +625,139 @@ function Controller() {
 			}
 		}
 		controller.gameOver = true;
+		//delete the cookie
+		document.cookie = 'gameId=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
 	}
+
+	this.getCookie = function (cname) {
+		var name = cname + "=";
+		var decodedCookie = decodeURIComponent(document.cookie);
+		var ca = decodedCookie.split(';');
+		for (var i = 0; i < ca.length; i++) {
+			var c = ca[i];
+			while (c.charAt(0) == ' ') {
+				c = c.substring(1);
+			}
+			if (c.indexOf(name) == 0) {
+				return c.substring(name.length, c.length);
+			}
+		}
+		return "";
+	}
+
+
+	this.updateStateInDB = function (gameId) {
+		var invocation = new XMLHttpRequest();
+		var url = 'http://localhost:8080/cfast-status/' + gameId;
+		console.log("PUT URL: " + url);
+		console.log("GAME ID: " + this.mongoGameId);
+
+		var jsonString = JSON.stringify(board, ["columns", "hexes", "raphaelHex",
+			"data", "color", "pendingColor",
+			"attrs", "fill"]);
+
+		console.log("jsonString: " + jsonString);
+		invocation.open('PUT', url, true);
+		invocation.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+		//withCredentials = true;
+
+		//invocation.onreadystatechange = function () {
+		invocation.onload = function () {
+			if (this.readyState == 4 && this.status == 200) {
+				var newBoard = JSON.parse(this.responseText);
+				console.log("updated board: " + JSON.stringify(newBoard));
+
+				/*newBoard.columns.forEach((cl, i) => {
+					//console.log("columns[" + i + "]:" + JSON.stringify(cl));
+					cl.hexes.forEach((hx, j) => {
+						if (null != hx) {
+							board.columns[i].hexes[j].color = hx.color;
+							board.columns[i].hexes[j].raphaelHex.attr("fill", hx.raphaelHex.attrs.fill);
+							board.columns[i].hexes[j].raphaelHex.data("color", hx.color);
+						}
+					});
+				}); */
+			}
+		};
+
+		invocation.send(jsonString);
+	}
+
+	this.getStateFromDB = function (mongoGameId) {
+		var invocation = new XMLHttpRequest();
+		var url = 'http://localhost:8080/cfast-status/' + mongoGameId;
+		var jsonString = JSON.stringify(board, ["columns", "hexes", "raphaelHex",
+			"data", "color", "pendingColor",
+			"attrs", "fill"]);
+
+		console.log("jsonString: " + jsonString);
+		invocation.open('GET', url, true);
+		invocation.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+		//withCredentials = true;
+
+		//invocation.onreadystatechange = function () {
+		invocation.onload = function () {
+			if (this.readyState == 4 && this.status == 200) {
+				var newBoard = JSON.parse(this.responseText);
+				console.log("updated board: " + JSON.stringify(newBoard));
+				newBoard.columns.forEach((cl, i) => {
+					//console.log("columns[" + i + "]:" + JSON.stringify(cl));
+					cl.hexes.forEach((hx, j) => {
+						if (null != hx) {
+							board.columns[i].hexes[j].color = hx.color;
+							board.columns[i].hexes[j].raphaelHex.attr("fill", hx.raphaelHex.attrs.fill);
+							board.columns[i].hexes[j].raphaelHex.data("color", hx.color);
+						}
+					});
+				});
+			}
+		};
+
+		invocation.send();
+	}
+
+	this.insertStateToDB = function () {
+		var invocation = new XMLHttpRequest();
+		var url = 'http://localhost:8080/cfast-status/';
+		var jsonString = JSON.stringify(board, ["columns", "hexes", "raphaelHex",
+			"data", "color", "pendingColor",
+			"attrs", "fill"]);
+
+		console.log("jsonString insert request: " + jsonString);
+		invocation.open('POST', url, true);
+		invocation.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+		//withCredentials = true;
+
+		//invocation.onreadystatechange = function () {
+		invocation.onload = function () {
+			if (this.readyState == 4 && this.status == 200) {
+				var newBoard = JSON.parse(this.responseText);
+				console.log("Inserted Board: " + JSON.stringify(newBoard));
+				controller.mongoGameId = newBoard._id;
+				console.log("###### _id: " + controller.mongoGameId);
+				newBoard.columns.forEach((cl, i) => {
+					//console.log("columns[" + i + "]:" + JSON.stringify(cl));
+					cl.hexes.forEach((hx, j) => {
+						if (null != hx) {
+							board.columns[i].hexes[j].color = hx.color;
+							board.columns[i].hexes[j].raphaelHex.attr("fill", hx.raphaelHex.attrs.fill);
+							board.columns[i].hexes[j].raphaelHex.data("color", hx.color);
+						}
+					});
+				});
+			}
+
+			var myCookie = "gameId=" + controller.mongoGameId + ";max-age=2629746;path=/";
+			document.cookie = myCookie;
+
+			console.log("myCookie: " + myCookie);
+			console.log("READ COOKIE: " + controller.getCookie("gameId"));
+		};
+
+		invocation.send(jsonString);
+	}
+
+
 
 } // End of Controller constructor
 
@@ -820,37 +896,19 @@ board.drawBoard();
 board.setInitialThreeHexes();
 
 var controller = new Controller();
+controller.mongoGameId = controller.getCookie("gameId")
+console.log("READ GAME ID FROM COOKIE: " + controller.mongoGameId);
+if (controller.mongoGameId === "") {
 
-//var button = document.getElementById("check")
-//var doneButton = document.getElementById("done")
+	//comment the next three lines when mongo is available
+	//console.log("creating a cookie");
+	//var myCookie = "gameId=100;max-age=2629746;path=/";
+	//document.cookie = myCookie;
 
-//button.addEventListener("click", controller.checkColumnViaButton, false);
-//doneButton.addEventListener("click", controller.completeTurn, false);
-
-/*function formToJSON() {
-	return JSON.stringify({
-		"name": "The Hudsucker Proxy",
-		"description": "Second best movie ever made",
-		"cover_image": "C:\\Users\\cnedj\\javascript\\api-colorfast\\hud.jpg"
-	});
+	//uncomment the next two lines when mongo is available
+	console.log("inserting to DB");
+	controller.insertStateToDB();
+} else {
+	console.log("Getting state from DB.  Game id: " + controller.mongoGameId)
+	controller.getStateFromDB(controller.mongoGameId);
 }
-
-$(function () {
-	$.ajax({
-		type: 'GET',
-		contentType: 'application/json',
-		dataType: 'jsonp',
-		url: 'http://localhost:3000/movies',
-		headers: {
-			'Access-Control-Allow-Origin': '*',
-			'Access-Control-Allow-Methods': 'HEAD, GET, POST, PUT, PATCH, DELETE',
-			'Access-Control-Allow-Headers': 'Origin, Content-Type, X-Auth-Token',
-		},
-		//data: formToJSON(),
-		//username: 'administrator',
-		//password: 'roman',
-		success: function (data, textStatus, jqXHR) { alert('Stock updated successfully. Status: ' + textStatus); },
-		error: function (jqXHR, textStatus, errorThrown) { alert('update Stock error: ' + textStatus); }
-
-	});
-}); */
