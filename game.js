@@ -1,22 +1,22 @@
 
 var paper = new Raphael(document.getElementById("board"), 800, 800);
 
-function raphaelText(x,y) {
-	return paper.text(x,y,"Current Player: Player1 --> Play a red");
+function raphaelText(x, y) {
+	return paper.text(x, y, "Current Player: Player1 --> Play a red");
 }
 
-function raphaelSquare(x,y,linesize) {
-	return paper.rect(x,y,linesize, linesize);
+function raphaelSquare(x, y, linesize) {
+	return paper.rect(x, y, linesize, linesize);
 }
 
-function raphaelHex(x,y,linesize) {
-    	var thirtyRadians = 30 * (Math.PI / 180);
-	var pathLine = '' + 
-		'M' + x + ' ' + y + (4 * (linesize * Math.cos(thirtyRadians) * (-1))) +  ' '
-		+ 'l' + (linesize/(2)) + ' ' + (linesize * Math.cos(thirtyRadians) * (-1)) + ' '
+function raphaelHex(x, y, linesize) {
+	var thirtyRadians = 30 * (Math.PI / 180);
+	var pathLine = '' +
+		'M' + x + ' ' + y + (4 * (linesize * Math.cos(thirtyRadians) * (-1))) + ' '
+		+ 'l' + (linesize / (2)) + ' ' + (linesize * Math.cos(thirtyRadians) * (-1)) + ' '
 		+ 'h' + linesize + ' '
-		+ 'l' + (linesize/(2)) + ' ' + (linesize * Math.cos(thirtyRadians) * (1)) + ' '
-		+ 'l' + (linesize/(-2)) + ' ' + (linesize * Math.cos(thirtyRadians) * (1))
+		+ 'l' + (linesize / (2)) + ' ' + (linesize * Math.cos(thirtyRadians) * (1)) + ' '
+		+ 'l' + (linesize / (-2)) + ' ' + (linesize * Math.cos(thirtyRadians) * (1))
 		+ 'h' + (-linesize)
 		+ 'Z';
 
@@ -24,7 +24,7 @@ function raphaelHex(x,y,linesize) {
 }
 
 // Hexagon constructor
-function Hexagon(x,y,linesize,hexInColumn) {
+function Hexagon(x, y, linesize, hexInColumn) {
 	this.x = x;
 	this.y = y;
 	this.linesize = linesize;
@@ -46,61 +46,61 @@ function Column(column, depth, minIndex, maxIndex, xOffset, yOffset, linesize) {
 	this.linesize = linesize;
 	this.cos = linesize * (Math.cos(30 * (Math.PI / 180)));
 	this.hexes = new Array();
-	
+
 	//x and y are where we start drawing the top of column 1
 	this.x = 150;
 	this.y = 150;
 
-	this.clickHandler = function(evt) {
+	this.clickHandler = function (evt) {
 
 		controller.hexSelected = true;
 		controller.click++;
-		if(controller.currentHexSelected) {
-			controller.currentHexSelected.attr({stroke: "gray"});
+		if (controller.currentHexSelected) {
+			controller.currentHexSelected.attr({ stroke: "gray" });
 			controller.currentHexSelected.g.remove();
 		}
 		controller.currentHexSelected = this;
 		this.toFront();
-		this.g = this.glow({color: "cyan", width: 25});
-		this.attr({stroke: "cyan"});
+		this.g = this.glow({ color: "cyan", width: 25 });
+		this.attr({ stroke: "cyan" });
 
 		// If selected hex is black (empty)
 		if (this.data("color") == 99) {
-					
+
 			// Initial player move
 			if (!controller.moved) {
-				board.square1.attr({fill: controller.spectrum[controller.playerColors[controller.turn%2]]});
-				board.square2.attr({fill: controller.spectrum[controller.playerColors[controller.turn%2]]});
-				board.square1.data("color", controller.playerColors[controller.turn%2]);
-				board.square2.data("color", controller.playerColors[controller.turn%2]);
+				board.square1.attr({ fill: controller.spectrum[controller.playerColors[controller.turn % 2]] });
+				board.square2.attr({ fill: controller.spectrum[controller.playerColors[controller.turn % 2]] });
+				board.square1.data("color", controller.playerColors[controller.turn % 2]);
+				board.square2.data("color", controller.playerColors[controller.turn % 2]);
 
 				controller.moved = true;
 
-			// Yellow part of move
+				// Yellow part of move
 			} else {
-				board.square1.attr({fill: controller.spectrum[0]});
-				board.square2.attr({fill: controller.spectrum[0]});
+				board.square1.attr({ fill: controller.spectrum[0] });
+				board.square2.attr({ fill: controller.spectrum[0] });
 				board.square1.data("color", 0);
 				board.square2.data("color", 0);
 
 				controller.movedYellow = true;
 			}
 
-			controller.currentHexSelected.attr({fill: (board.square1.attr('fill'))}); 
+			controller.currentHexSelected.attr({ fill: (board.square1.attr('fill')) });
 			console.log("Just set the fill of the selected Hex.");
 			controller.currentHexSelected.data("pendingColor", board.square1.data("color"));
 			controller.completeTurn();
 
-		// If selected hex already has a color
+			// If selected hex already has a color
 		} else {
 
 			// Make the squares glow if not already glowing
 			if (!board.square1.isGlowing) {
-				board.square1.square1Glow = board.square1.glow({color: "cyan", width: 25});
-				board.square1.attr({stroke: "cyan"});
+				board.square1.square1Glow = board.square1.glow({ color: "cyan", width: 25 });
+				board.square1.attr({ stroke: "cyan" });
 				board.square1.isGlowing = true;
-				board.square2.square2Glow = board.square2.glow({color: "cyan", width: 25});
-				board.square2.attr({stroke: "cyan"});
+				board.square2.square2Glow = board.square2.glow({ color: "cyan", width: 25 });
+				board.square2.attr({ stroke: "cyan" });
 				board.square2.isGlowing = true;
 			}
 
@@ -109,71 +109,70 @@ function Column(column, depth, minIndex, maxIndex, xOffset, yOffset, linesize) {
 				// If current hex is yellow, need to wrap to green, since
 				// apparently JS doesn't correctly handle negative modulo
 				if (this.data("color") == 0) {
-					board.square1.attr({fill: controller.spectrum[5]});
+					board.square1.attr({ fill: controller.spectrum[5] });
 					board.square1.data("color", 5);
-				// selected hex is not yellow
+					// selected hex is not yellow
 				} else {
-					board.square1.attr({fill: controller.spectrum[(this.data("color")-1)%6]});
-					board.square1.data("color", (this.data("color")-1)%6);
+					board.square1.attr({ fill: controller.spectrum[(this.data("color") - 1) % 6] });
+					board.square1.data("color", (this.data("color") - 1) % 6);
 				}
-				board.square2.attr({fill: controller.spectrum[(this.data("color")+1)%6]});
-				board.square2.data("color", (this.data("color")+1)%6);
-			// Yellow part of move
+				board.square2.attr({ fill: controller.spectrum[(this.data("color") + 1) % 6] });
+				board.square2.data("color", (this.data("color") + 1) % 6);
+				// Yellow part of move
 			} else {
 				// selected hex is already yellow
 				if (this.data("color") == 0) {
 					alert("Select another hex.  This one is already yellow.");
 					return;
-				// Selected hex is not yellow
+					// Selected hex is not yellow
 				} else {
-						
+
 					// If hex is red, the only choice is orange
 					if (this.data("color") == 2) {
-						board.square1.attr({fill: controller.spectrum[1]});
+						board.square1.attr({ fill: controller.spectrum[1] });
 						board.square1.data("color", 1);
-						board.square2.attr({fill: controller.spectrum[1]});
+						board.square2.attr({ fill: controller.spectrum[1] });
 						board.square2.data("color", 1);
-							
-					// If hex is blue, the only choice is green
+
+						// If hex is blue, the only choice is green
 					} else if (this.data("color") == 4) {
-						board.square1.attr({fill: controller.spectrum[5]});
+						board.square1.attr({ fill: controller.spectrum[5] });
 						board.square1.data("color", 5);
-						board.square2.attr({fill: controller.spectrum[5]});
+						board.square2.attr({ fill: controller.spectrum[5] });
 						board.square2.data("color", 5);
-						
-					// hex is neither red nor blue nor yellow
+
+						// hex is neither red nor blue nor yellow
 					} else {
-						board.square1.attr({fill: controller.spectrum[(this.data("color")-1)%6]});
-						board.square1.data("color", (this.data("color")-1)%6);
-						board.square2.attr({fill: controller.spectrum[(this.data("color")+1)%6]});
-						board.square2.data("color", (this.data("color")+1)%6);
+						board.square1.attr({ fill: controller.spectrum[(this.data("color") - 1) % 6] });
+						board.square1.data("color", (this.data("color") - 1) % 6);
+						board.square2.attr({ fill: controller.spectrum[(this.data("color") + 1) % 6] });
+						board.square2.data("color", (this.data("color") + 1) % 6);
 					}
 				} // Selected hex is not yellow	
 			} // Yellow part of move
 		} // Selected hex is not black
-
 	} // End of hex click handler
-			
+
 	//
 	// Method to draw the column instance
 	//
-	this.drawColumn = function() {
+	this.drawColumn = function () {
 
 		//console.log ("drawColum(): in column: " + this.column);
 		var currYOffset = this.yOffset;
 		var index = 7 - this.depth
 		//console.log("drawColumn(), depth: " + this.depth + " index: " + index);
-		
+
 		//
 		// Main loop for drawing the seven columns
 		//
-		for (i=0; i < this.depth; i++) {
+		for (i = 0; i < this.depth; i++) {
 
-			hex = new Hexagon (this.x+(this.xOffset*this.linesize), this.y+(currYOffset*this.cos), linesize, i);
-			hex.raphaelHex.attr({fill: hex.defaultColor});
-			hex.raphaelHex.attr({stroke: "gray"});
+			hex = new Hexagon(this.x + (this.xOffset * this.linesize), this.y + (currYOffset * this.cos), linesize, i);
+			hex.raphaelHex.attr({ fill: hex.defaultColor });
+			hex.raphaelHex.attr({ stroke: "gray" });
 			hex.raphaelHex.attr("stroke-width", "2");
-			hex.raphaelHex.data("color",99);
+			hex.raphaelHex.data("color", 99);
 			hex.raphaelHex.data("column", this.column);
 			hex.raphaelHex.data("index", index);
 
@@ -182,24 +181,24 @@ function Column(column, depth, minIndex, maxIndex, xOffset, yOffset, linesize) {
 			//
 			hex.raphaelHex.click(this.clickHandler);
 
-			currYOffset+=2;
+			currYOffset += 2;
 			//this.hexes.push(hex);
 			this.hexes[index] = hex;
 			//console.log ("drawColum(): created hex index: " + index);
-			index+=2;
+			index += 2;
 		} // End of for loop in column (loop for each hex)
 	}; // End of drawColumn function
 
 } // end of Column contructor
 
-function HorizontalRow (firstColumn, minIndex, maxIndex, length) {
+function HorizontalRow(firstColumn, minIndex, maxIndex, length) {
 	this.firstColumn = firstColumn;
 	this.minIndex = minIndex;
 	this.maxIndex = maxIndex;
 	this.length = length;
 }
 
-function Blocked () {
+function Blocked() {
 	this.middle = undefined;
 	this.above = undefined;
 	this.below = undefined;
@@ -217,7 +216,25 @@ function Blocked () {
 	this.yLowerLeft = undefined;
 }
 
-function Controller () {
+var boardReplacer = function (key, value) {
+	console.log("boardReplacer: " + value);
+	// Filtering out properties
+	if (value instanceof Raphael) {
+		return undefined;
+	}
+	return value;
+}
+
+var replacer = function (key, value) {
+	console.log("replacer: " + value);
+	// Filtering out properties
+	if (value instanceof Raphael) {
+		return undefined;
+	}
+	return value;
+}
+
+function Controller() {
 
 	//
 	// Color legend:
@@ -245,6 +262,7 @@ function Controller () {
 	// turn % 2 = 0 ==> turn is red
 	// turn % 2 = 1 ==> turn is blue
 	this.turn = 0;
+	this.mongoGameId;
 
 	this.currentHexSelected = undefined;
 	this.moved = false;
@@ -256,25 +274,29 @@ function Controller () {
 	this.blocked[1] = new Blocked(); //stores blocked cells based on Blue's move
 
 	//console.log("this.turn: " + this.turn);
-        this.gameOver = false;
+	this.gameOver = false;
 	this.winningColor;
-	this.incrementTurn = function() {
+	this.incrementTurn = function () {
 		this.turn++;
 	}
 
-	this.checkColumn = function(columnIndex) {
+	this.setMongoGameId = function (id) {
+		this.mongoGameId = id;
+	}
+
+	this.checkColumn = function (columnIndex) {
 		var count = 0;
-		var playerColor = controller.playerColors[(controller.turn)%2];
+		var playerColor = controller.playerColors[(controller.turn) % 2];
 		var currentCellColor;
 		var winner = false;
 
-		for (var i=board.columns[columnIndex].minIndex; i <= board.columns[columnIndex].maxIndex; i=i+2) {
+		for (var i = board.columns[columnIndex].minIndex; i <= board.columns[columnIndex].maxIndex; i = i + 2) {
 
 			currentCellColor = board.columns[columnIndex].hexes[i].raphaelHex.data("color");
 
 			if ((board.columns[columnIndex].hexes[i].raphaelHex.data("color") == playerColor) ||
-			   (board.columns[columnIndex].hexes[i].raphaelHex.data("color") == playerColor-1) ||
-			   (board.columns[columnIndex].hexes[i].raphaelHex.data("color") == playerColor+1)) {
+				(board.columns[columnIndex].hexes[i].raphaelHex.data("color") == playerColor - 1) ||
+				(board.columns[columnIndex].hexes[i].raphaelHex.data("color") == playerColor + 1)) {
 				count++;
 				//console.log("in equal");
 				//console.log("count: " + count);
@@ -296,21 +318,21 @@ function Controller () {
 		}
 	}
 
-	this.checkDownwardRow = function(rowIndex) {
+	this.checkDownwardRow = function (rowIndex) {
 
 		var count = 0;
-		var playerColor = controller.playerColors[(controller.turn)%2];
+		var playerColor = controller.playerColors[(controller.turn) % 2];
 		var currentCellColor;
 		var winner = false;
 		var currentColumn = board.downwardRows[rowIndex].firstColumn;
 
-		for (var i=board.downwardRows[rowIndex].minIndex; i <= board.downwardRows[rowIndex].maxIndex; i=i+1) {
+		for (var i = board.downwardRows[rowIndex].minIndex; i <= board.downwardRows[rowIndex].maxIndex; i = i + 1) {
 
 			currentCellColor = board.columns[currentColumn].hexes[i].raphaelHex.data("color");
 
 			if ((currentCellColor == playerColor) ||
-			   (currentCellColor == playerColor-1) ||
-			   (currentCellColor == playerColor+1)) {
+				(currentCellColor == playerColor - 1) ||
+				(currentCellColor == playerColor + 1)) {
 				count++;
 				if (count >= 5) {
 					winner = true;
@@ -319,7 +341,7 @@ function Controller () {
 			} else {
 				count = 0;
 			}
-			currentColumn+=1;
+			currentColumn += 1;
 		}
 
 		if (winner) {
@@ -331,21 +353,21 @@ function Controller () {
 		}
 	}
 
-	this.checkUpwardRow = function(rowIndex) {
+	this.checkUpwardRow = function (rowIndex) {
 
 		var count = 0;
-		var playerColor = controller.playerColors[(controller.turn)%2];
+		var playerColor = controller.playerColors[(controller.turn) % 2];
 		var currentCellColor;
 		var winner = false;
 		var currentColumn = board.upwardRows[rowIndex].firstColumn;
 
-		for (var i=board.upwardRows[rowIndex].minIndex; i >= board.upwardRows[rowIndex].maxIndex; i=i-1) {
+		for (var i = board.upwardRows[rowIndex].minIndex; i >= board.upwardRows[rowIndex].maxIndex; i = i - 1) {
 
 			currentCellColor = board.columns[currentColumn].hexes[i].raphaelHex.data("color");
 
 			if ((currentCellColor == playerColor) ||
-			   (currentCellColor == playerColor-1) ||
-			   (currentCellColor == playerColor+1)) {
+				(currentCellColor == playerColor - 1) ||
+				(currentCellColor == playerColor + 1)) {
 				count++;
 				if (count >= 5) {
 					winner = true;
@@ -354,7 +376,7 @@ function Controller () {
 			} else {
 				count = 0;
 			}
-			currentColumn+=1;
+			currentColumn += 1;
 		}
 
 		if (winner) {
@@ -371,9 +393,9 @@ function Controller () {
 
 		hex.toFront();
 		if (hex.g == undefined) {
-			hex.g = hex.glow({color: "white", width: 35});
+			hex.g = hex.glow({ color: "white", width: 35 });
 		}
-		hex.attr({stroke: "cyan"});
+		hex.attr({ stroke: "cyan" });
 		hex.attr("stroke-width", "5");
 		hex.unclick(Column.clickHandler);
 	}
@@ -384,107 +406,107 @@ function Controller () {
 			hex.g.remove();
 			hex.g = undefined;
 		}
-		hex.attr({stroke: "gray"});
+		hex.attr({ stroke: "gray" });
 		hex.attr("stroke-width", "2");
 		hex.toFront();
-		hex.click(board.columns[parseInt(hex.data("column"))-1].clickHandler);
+		hex.click(board.columns[parseInt(hex.data("column")) - 1].clickHandler);
 	}
 
-	this.blockHexes = function(c) {
+	this.blockHexes = function (c) {
 
 		this.blockHex(c.middle);
-		if (c.above)       { this.blockHex(c.above);      }
-		if (c.below)       { this.blockHex(c.below);      }
-		if (c.upperRight)  { this.blockHex(c.upperRight); }
-		if (c.lowerRight)  { this.blockHex(c.lowerRight); }
-		if (c.upperLeft)   { this.blockHex(c.upperLeft);  }
-		if (c.lowerLeft)   { this.blockHex(c.lowerLeft);  }
+		if (c.above) { this.blockHex(c.above); }
+		if (c.below) { this.blockHex(c.below); }
+		if (c.upperRight) { this.blockHex(c.upperRight); }
+		if (c.lowerRight) { this.blockHex(c.lowerRight); }
+		if (c.upperLeft) { this.blockHex(c.upperLeft); }
+		if (c.lowerLeft) { this.blockHex(c.lowerLeft); }
 
 		this.unBlockHex(c.yMiddle); //remove the glow from selecting this hex
 		this.blockHex(c.yMiddle);
-		if (c.yAbove)      { this.blockHex(c.yAbove);      }
-		if (c.yBelow)      { this.blockHex(c.yBelow);      }
+		if (c.yAbove) { this.blockHex(c.yAbove); }
+		if (c.yBelow) { this.blockHex(c.yBelow); }
 		if (c.yUpperRight) { this.blockHex(c.yUpperRight); }
 		if (c.yLowerRight) { this.blockHex(c.yLowerRight); }
-		if (c.yUpperLeft)  { this.blockHex(c.yUpperLeft);  }
-		if (c.yLowerLeft)  { this.blockHex(c.yLowerLeft);  }
+		if (c.yUpperLeft) { this.blockHex(c.yUpperLeft); }
+		if (c.yLowerLeft) { this.blockHex(c.yLowerLeft); }
 
 	}
 
-	this.unBlockHexes = function(j) {
+	this.unBlockHexes = function (j) {
 
 		console.log("unblock selected");
 		this.unBlockHex(j.middle);
-		if (j.above)      { this.unBlockHex(j.above); j.above = undefined;     }
-		if (j.below)      { this.unBlockHex(j.below); j.below = undefined;     }
+		if (j.above) { this.unBlockHex(j.above); j.above = undefined; }
+		if (j.below) { this.unBlockHex(j.below); j.below = undefined; }
 		if (j.upperRight) { this.unBlockHex(j.upperRight); j.upperRight = undefined; }
 		if (j.lowerRight) { this.unBlockHex(j.lowerRight); j.lowerRight = undefined; }
-		if (j.upperLeft)  { this.unBlockHex(j.upperLeft); j.upperLeft = undefined;  }
-		if (j.lowerLeft)  { this.unBlockHex(j.lowerLeft); j.lowerLeft = undefined;  }
+		if (j.upperLeft) { this.unBlockHex(j.upperLeft); j.upperLeft = undefined; }
+		if (j.lowerLeft) { this.unBlockHex(j.lowerLeft); j.lowerLeft = undefined; }
 
 		this.unBlockHex(j.yMiddle);
-		if (j.yAbove)      { this.unBlockHex(j.yAbove); j.yAbove = undefined;     }
-		if (j.yBelow)      { this.unBlockHex(j.yBelow); j.yBelow = undefined;     }
+		if (j.yAbove) { this.unBlockHex(j.yAbove); j.yAbove = undefined; }
+		if (j.yBelow) { this.unBlockHex(j.yBelow); j.yBelow = undefined; }
 		if (j.yUpperRight) { this.unBlockHex(j.yUpperRight); j.yUpperRight = undefined; }
 		if (j.yLowerRight) { this.unBlockHex(j.yLowerRight); j.yLowerRight = undefined; }
-		if (j.yUpperLeft)  { this.unBlockHex(j.yUpperLeft); j.yUpperLeft = undefined; }
-		if (j.yLowerLeft)  { this.unBlockHex(j.yLowerLeft); j.yLowerLeft = undefined; }
+		if (j.yUpperLeft) { this.unBlockHex(j.yUpperLeft); j.yUpperLeft = undefined; }
+		if (j.yLowerLeft) { this.unBlockHex(j.yLowerLeft); j.yLowerLeft = undefined; }
 
 	}
-	this.setBlocked = function() {
+	this.setBlocked = function () {
 
 		// Identify the hexes which cannot be played and make them glow
-		var column = controller.currentHexSelected.data("column")-1;
-		var index  = controller.currentHexSelected.data("index");
+		var column = controller.currentHexSelected.data("column") - 1;
+		var index = controller.currentHexSelected.data("index");
 
-		var c = controller.blocked[controller.turn%2];
+		var c = controller.blocked[controller.turn % 2];
 
 		//initialize set of hexes to block to null, to allow for when selected hex is at edge of the board
 		c.above = null; c.below = null; c.upperRight = null; c.lowerRight = null; c.upperLeft = null; c.lowerLeft = null;
 
 		c.middle = controller.currentHexSelected;
-		if (index-2 >= board.columns[column].minIndex)                        { c.above      = board.columns[column].hexes[parseInt(index-2)].raphaelHex;   }
-		if (index+2 <= board.columns[column].maxIndex)                        { c.below      = board.columns[column].hexes[parseInt(index+2)].raphaelHex;   }
-		if ((column+1 <= 6) && (index-1 >= board.columns[column+1].minIndex)) { c.upperRight = board.columns[column+1].hexes[parseInt(index-1)].raphaelHex; }
-		if ((column+1 <= 6) && (index+1 <= board.columns[column+1].maxIndex)) { c.lowerRight = board.columns[column+1].hexes[parseInt(index+1)].raphaelHex;  console.log("!!!!!!!!!!!! lower right colum: " + parseInt(column+1) + "   index: " + parseInt(index+1)); }
-		if ((column-1 >= 0) && (index-1 >= board.columns[column-1].minIndex)) { c.upperLeft  = board.columns[column-1].hexes[parseInt(index-1)].raphaelHex; }
-		if ((column-1 >= 0) && (index+1 <= board.columns[column-1].maxIndex)) { c.lowerLeft  = board.columns[column-1].hexes[parseInt(index+1)].raphaelHex; }
+		if (index - 2 >= board.columns[column].minIndex) { c.above = board.columns[column].hexes[parseInt(index - 2)].raphaelHex; }
+		if (index + 2 <= board.columns[column].maxIndex) { c.below = board.columns[column].hexes[parseInt(index + 2)].raphaelHex; }
+		if ((column + 1 <= 6) && (index - 1 >= board.columns[column + 1].minIndex)) { c.upperRight = board.columns[column + 1].hexes[parseInt(index - 1)].raphaelHex; }
+		if ((column + 1 <= 6) && (index + 1 <= board.columns[column + 1].maxIndex)) { c.lowerRight = board.columns[column + 1].hexes[parseInt(index + 1)].raphaelHex; console.log("!!!!!!!!!!!! lower right colum: " + parseInt(column + 1) + "   index: " + parseInt(index + 1)); }
+		if ((column - 1 >= 0) && (index - 1 >= board.columns[column - 1].minIndex)) { c.upperLeft = board.columns[column - 1].hexes[parseInt(index - 1)].raphaelHex; }
+		if ((column - 1 >= 0) && (index + 1 <= board.columns[column - 1].maxIndex)) { c.lowerLeft = board.columns[column - 1].hexes[parseInt(index + 1)].raphaelHex; }
 	}
 
-	this.setYellowBlocked = function() {
+	this.setYellowBlocked = function () {
 
 		// Identify the hexes which cannot be played and make them glow
-		var column = controller.currentHexSelected.data("column")-1;
-		var index  = controller.currentHexSelected.data("index");
+		var column = controller.currentHexSelected.data("column") - 1;
+		var index = controller.currentHexSelected.data("index");
 
-		var c = controller.blocked[controller.turn%2];
+		var c = controller.blocked[controller.turn % 2];
 
 		c.yMiddle = controller.currentHexSelected;
 
-		if (index-2 >= board.columns[column].minIndex) {
-			c.yAbove = board.columns[column].hexes[parseInt(index-2)].raphaelHex;
+		if (index - 2 >= board.columns[column].minIndex) {
+			c.yAbove = board.columns[column].hexes[parseInt(index - 2)].raphaelHex;
 		}
-		if (index+2 <= board.columns[column].maxIndex) {
-			c.yBelow = board.columns[column].hexes[parseInt(index+2)].raphaelHex;
+		if (index + 2 <= board.columns[column].maxIndex) {
+			c.yBelow = board.columns[column].hexes[parseInt(index + 2)].raphaelHex;
 		}
-		if ((column+1 <= 6) && (index-1 >= board.columns[column+1].minIndex)) {
-			c.yUpperRight = board.columns[column+1].hexes[parseInt(index-1)].raphaelHex;
+		if ((column + 1 <= 6) && (index - 1 >= board.columns[column + 1].minIndex)) {
+			c.yUpperRight = board.columns[column + 1].hexes[parseInt(index - 1)].raphaelHex;
 		}
-		if ((column+1 <= 6) && (index+1 <= board.columns[column+1].maxIndex)) {
-			c.yLowerRight = board.columns[column+1].hexes[parseInt(index+1)].raphaelHex;
+		if ((column + 1 <= 6) && (index + 1 <= board.columns[column + 1].maxIndex)) {
+			c.yLowerRight = board.columns[column + 1].hexes[parseInt(index + 1)].raphaelHex;
 		}
-		if ((column-1 >= 0) && (index-1 >= board.columns[column-1].minIndex)) {
-			c.yUpperLeft  = board.columns[column-1].hexes[parseInt(index-1)].raphaelHex;
+		if ((column - 1 >= 0) && (index - 1 >= board.columns[column - 1].minIndex)) {
+			c.yUpperLeft = board.columns[column - 1].hexes[parseInt(index - 1)].raphaelHex;
 		}
-		if ((column-1 >= 0) && (index+1 <= board.columns[column-1].maxIndex)) {
-			c.yLowerLeft  = board.columns[column-1].hexes[parseInt(index+1)].raphaelHex;
+		if ((column - 1 >= 0) && (index + 1 <= board.columns[column - 1].maxIndex)) {
+			c.yLowerLeft = board.columns[column - 1].hexes[parseInt(index + 1)].raphaelHex;
 		}
 	}
 
-	this.makeSquaresBlack = function() {
-		board.square1.attr({fill: this.defaultColor});
+	this.makeSquaresBlack = function () {
+		board.square1.attr({ fill: this.defaultColor });
 		board.square1.data("color", this.defaultColorNum);
-		board.square2.attr({fill: this.defaultColor});
+		board.square2.attr({ fill: this.defaultColor });
 		board.square2.data("color", this.defaultColorNum);
 
 		if (board.square1.square1Glow) {
@@ -495,7 +517,7 @@ function Controller () {
 		}
 	}
 
-	this.completeTurn = function(event) {
+	this.completeTurn = function (event) {
 
 		controller.hexSelected = false;
 		console.log("In completeTurn; controller.hexSelected: " + controller.hexSelected);
@@ -507,27 +529,40 @@ function Controller () {
 			return;
 		}
 
-		if (controller.moved  && !controller.movedYellow) {
+		if (controller.moved && !controller.movedYellow) {
 			controller.currentHexSelected.data("color", controller.currentHexSelected.data("pendingColor"));
-			console.log("Player " + ((parseInt(controller.turn)%2)+1) + " completed first part of turn.");
+
+			// New Code
+			var currColumn = controller.currentHexSelected.data("column") - 1;
+			var currIndex = controller.currentHexSelected.data("index");
+			board.columns[currColumn].hexes[currIndex].color = controller.currentHexSelected.data("pendingColor");
+			console.log("!!!!!!!!!!!!!!!pendingColor" + board.columns[currColumn].hexes[currIndex].color);
+
+			console.log("Player " + ((parseInt(controller.turn) % 2) + 1) + " completed first part of turn.");
 			controller.hexSelected == false;
 
-			strCurrTurn = "Current Player: Player" + (parseInt((controller.turn)%2)+1) + " --> Play a yellow";
-			board.currentPlayerText.attr("text", strCurrTurn); 
-			  
+			strCurrTurn = "Current Player: Player" + (parseInt((controller.turn) % 2) + 1) + " --> Play a yellow";
+			board.currentPlayerText.attr("text", strCurrTurn);
+
 			// identify the hexes which should be blocked
 			controller.setBlocked();
 
 		}
 
 		if (controller.moved && controller.movedYellow) {
-			console.log("Player finishing turn: " + ((parseInt(controller.turn)%2)+1));
+			console.log("Player finishing turn: " + ((parseInt(controller.turn) % 2) + 1));
 
 			controller.currentHexSelected.data("color", controller.currentHexSelected.data("pendingColor"));
 
+			// New Code
+			var currColumn = controller.currentHexSelected.data("column") - 1;
+			var currIndex = controller.currentHexSelected.data("index");
+			board.columns[currColumn].hexes[currIndex].color = controller.currentHexSelected.data("pendingColor");
+			console.log("!!!!!!!!!!!!!!!pendingColor" + board.columns[currColumn].hexes[currIndex].color);
+
 			// no need to unblock cells on first turn
 			if (controller.turn) {
-				controller.unBlockHexes(controller.blocked[(controller.turn-1)%2]);
+				controller.unBlockHexes(controller.blocked[(controller.turn - 1) % 2]);
 			}
 
 			controller.checkColumn(1);
@@ -551,43 +586,178 @@ function Controller () {
 			if (!controller.gameOver) {
 				// identify the hexes which should be blocked and make them glow
 				controller.setYellowBlocked();
-				controller.blockHexes(controller.blocked[controller.turn%2]);
+				controller.blockHexes(controller.blocked[controller.turn % 2]);
 
 				// increment to the next turn
 				controller.incrementTurn();
-	
+
+				// call rest service here
+				controller.updateStateInDB(controller.mongoGameId);
+
 				// alert players to pass the game
-				var currTurn = (parseInt(controller.turn)%2)+1;
-				alert("Please pass game to player " + ((parseInt(controller.turn)%2)+1));
+				var currTurn = (parseInt(controller.turn) % 2) + 1;
+				alert("Please pass game to player " + ((parseInt(controller.turn) % 2) + 1));
 
 				// Update the text on the screen to direct the current player how to move
 				strCurrTurn = "Current Player: Player" + currTurn + " --> Play a "
-				       + controller.spectrum[controller.playerColors[controller.turn%2]];
-				board.currentPlayerText.attr("text", strCurrTurn); 
-				board.currentPlayerText.attr({"fill": controller.spectrum[controller.playerColors[controller.turn%2]]}); 
-	
+					+ controller.spectrum[controller.playerColors[controller.turn % 2]];
+				board.currentPlayerText.attr("text", strCurrTurn);
+				board.currentPlayerText.attr({ "fill": controller.spectrum[controller.playerColors[controller.turn % 2]] });
+
 				// reset the player move indicators
 				controller.moved = false;
 				controller.movedYellow = false;
-				
+
 			} else { // if game over print game over message
 				var str = controller.spectrum[controller.winningColor] + " WINS!!!";
-				board.currentPlayerText.attr("text", str); 
-				board.currentPlayerText.attr({"fill": controller.spectrum[controller.winningColor]});
+				board.currentPlayerText.attr("text", str);
+				board.currentPlayerText.attr({ "fill": controller.spectrum[controller.winningColor] });
 			}
 		}
 
 	}
 
-	this.endGame = function(playerColor) {
+	this.endGame = function (playerColor) {
 		console.log("XXXXXXXXXXXXXXXXX   IN endGame()    XXXXXXXXXXXXX");
-		for (i=0; i<board.columns.length; i++) {
-			for (j=board.columns[i].minIndex; j<=board.columns[i].maxIndex; j=j+2) {
+		for (i = 0; i < board.columns.length; i++) {
+			for (j = board.columns[i].minIndex; j <= board.columns[i].maxIndex; j = j + 2) {
 				board.columns[i].hexes[j].raphaelHex.unclick(Column.clickHandler);
 			}
 		}
 		controller.gameOver = true;
+		//delete the cookie
+		document.cookie = 'gameId=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
 	}
+
+	this.getCookie = function (cname) {
+		var name = cname + "=";
+		var decodedCookie = decodeURIComponent(document.cookie);
+		var ca = decodedCookie.split(';');
+		for (var i = 0; i < ca.length; i++) {
+			var c = ca[i];
+			while (c.charAt(0) == ' ') {
+				c = c.substring(1);
+			}
+			if (c.indexOf(name) == 0) {
+				return c.substring(name.length, c.length);
+			}
+		}
+		return "";
+	}
+
+
+	this.updateStateInDB = function (gameId) {
+		var invocation = new XMLHttpRequest();
+		var url = 'http://localhost:8080/cfast-status/' + gameId;
+		console.log("PUT URL: " + url);
+		console.log("GAME ID: " + this.mongoGameId);
+
+		var jsonString = JSON.stringify(board, ["columns", "hexes", "raphaelHex",
+			"data", "color", "pendingColor",
+			"attrs", "fill"]);
+
+		console.log("jsonString: " + jsonString);
+		invocation.open('PUT', url, true);
+		invocation.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+		//withCredentials = true;
+
+		//invocation.onreadystatechange = function () {
+		invocation.onload = function () {
+			if (this.readyState == 4 && this.status == 200) {
+				var newBoard = JSON.parse(this.responseText);
+				console.log("updated board: " + JSON.stringify(newBoard));
+
+				/*newBoard.columns.forEach((cl, i) => {
+					//console.log("columns[" + i + "]:" + JSON.stringify(cl));
+					cl.hexes.forEach((hx, j) => {
+						if (null != hx) {
+							board.columns[i].hexes[j].color = hx.color;
+							board.columns[i].hexes[j].raphaelHex.attr("fill", hx.raphaelHex.attrs.fill);
+							board.columns[i].hexes[j].raphaelHex.data("color", hx.color);
+						}
+					});
+				}); */
+			}
+		};
+
+		invocation.send(jsonString);
+	}
+
+	this.getStateFromDB = function (mongoGameId) {
+		var invocation = new XMLHttpRequest();
+		var url = 'http://localhost:8080/cfast-status/' + mongoGameId;
+		var jsonString = JSON.stringify(board, ["columns", "hexes", "raphaelHex",
+			"data", "color", "pendingColor",
+			"attrs", "fill"]);
+
+		console.log("jsonString: " + jsonString);
+		invocation.open('GET', url, true);
+		invocation.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+		//withCredentials = true;
+
+		//invocation.onreadystatechange = function () {
+		invocation.onload = function () {
+			if (this.readyState == 4 && this.status == 200) {
+				var newBoard = JSON.parse(this.responseText);
+				console.log("updated board: " + JSON.stringify(newBoard));
+				newBoard.columns.forEach((cl, i) => {
+					//console.log("columns[" + i + "]:" + JSON.stringify(cl));
+					cl.hexes.forEach((hx, j) => {
+						if (null != hx) {
+							board.columns[i].hexes[j].color = hx.color;
+							board.columns[i].hexes[j].raphaelHex.attr("fill", hx.raphaelHex.attrs.fill);
+							board.columns[i].hexes[j].raphaelHex.data("color", hx.color);
+						}
+					});
+				});
+			}
+		};
+
+		invocation.send();
+	}
+
+	this.insertStateToDB = function () {
+		var invocation = new XMLHttpRequest();
+		var url = 'http://localhost:8080/cfast-status/';
+		var jsonString = JSON.stringify(board, ["columns", "hexes", "raphaelHex",
+			"data", "color", "pendingColor",
+			"attrs", "fill"]);
+
+		console.log("jsonString insert request: " + jsonString);
+		invocation.open('POST', url, true);
+		invocation.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+		//withCredentials = true;
+
+		//invocation.onreadystatechange = function () {
+		invocation.onload = function () {
+			if (this.readyState == 4 && this.status == 200) {
+				var newBoard = JSON.parse(this.responseText);
+				console.log("Inserted Board: " + JSON.stringify(newBoard));
+				controller.mongoGameId = newBoard._id;
+				console.log("###### _id: " + controller.mongoGameId);
+				newBoard.columns.forEach((cl, i) => {
+					//console.log("columns[" + i + "]:" + JSON.stringify(cl));
+					cl.hexes.forEach((hx, j) => {
+						if (null != hx) {
+							board.columns[i].hexes[j].color = hx.color;
+							board.columns[i].hexes[j].raphaelHex.attr("fill", hx.raphaelHex.attrs.fill);
+							board.columns[i].hexes[j].raphaelHex.data("color", hx.color);
+						}
+					});
+				});
+			}
+
+			var myCookie = "gameId=" + controller.mongoGameId + ";max-age=2629746;path=/";
+			document.cookie = myCookie;
+
+			console.log("myCookie: " + myCookie);
+			console.log("READ COOKIE: " + controller.getCookie("gameId"));
+		};
+
+		invocation.send(jsonString);
+	}
+
+
 
 } // End of Controller constructor
 
@@ -601,22 +771,22 @@ function Board() {
 	this.downwardRows = [];
 	this.upwardRows = [];
 
-	this.currentPlayerText = raphaelText(200,550).attr({fill: 'red'});
-	this.currentPlayerText.attr("font-size",16);
-	this.square1 = raphaelSquare(500,500,50,50);
-	this.square2 = raphaelSquare(565,500,50,50);
+	this.currentPlayerText = raphaelText(200, 550).attr({ fill: 'red' });
+	this.currentPlayerText.attr("font-size", 16);
+	this.square1 = raphaelSquare(500, 500, 50, 50);
+	this.square2 = raphaelSquare(565, 500, 50, 50);
 
-	this.square1.attr({fill: this.defaultColor});
-	this.square1.attr({stroke: "gray"});
+	this.square1.attr({ fill: this.defaultColor });
+	this.square1.attr({ stroke: "gray" });
 	this.square1.attr("stroke-width", "2");
-	this.square2.attr({fill: this.defaultColor});
-	this.square2.attr({stroke: "gray"});
+	this.square2.attr({ fill: this.defaultColor });
+	this.square2.attr({ stroke: "gray" });
 	this.square2.attr("stroke-width", "2");
 
 	this.square1.isGlowing = false;
 	this.square2.isGlowing = false;
 
-	this.col1 = new Column(1, 4, 3, 9, 0, 0, this.linesize); 
+	this.col1 = new Column(1, 4, 3, 9, 0, 0, this.linesize);
 	this.columns.push(this.col1);
 	this.col2 = new Column(2, 5, 2, 10, 1.5, -1, this.linesize);
 	this.columns.push(this.col2);
@@ -628,44 +798,44 @@ function Board() {
 	this.columns.push(this.col5);
 	this.col6 = new Column(6, 5, 2, 10, 7.5, -1, this.linesize);
 	this.columns.push(this.col6);
-	this.col7 = new Column(7, 4, 3, 9, 9, 0, this.linesize); 
+	this.col7 = new Column(7, 4, 3, 9, 9, 0, this.linesize);
 	this.columns.push(this.col7);
-	
+
 	// function HorizontalRow (firstColumn, minIndex, maxIndex, length) {
 
-	this.downRow1 = new HorizontalRow(3,0,3,4);
+	this.downRow1 = new HorizontalRow(3, 0, 3, 4);
 	this.downwardRows.push(this.downRow1);
-	this.downRow2 = new HorizontalRow(2,1,5,5);
+	this.downRow2 = new HorizontalRow(2, 1, 5, 5);
 	this.downwardRows.push(this.downRow2);
-	this.downRow3 = new HorizontalRow(1,2,7,6);
+	this.downRow3 = new HorizontalRow(1, 2, 7, 6);
 	this.downwardRows.push(this.downRow3);
-	this.downRow4 = new HorizontalRow(0,3,9,7);
+	this.downRow4 = new HorizontalRow(0, 3, 9, 7);
 	this.downwardRows.push(this.downRow4);
-	this.downRow5 = new HorizontalRow(0,5,10,6);
+	this.downRow5 = new HorizontalRow(0, 5, 10, 6);
 	this.downwardRows.push(this.downRow5);
-	this.downRow6 = new HorizontalRow(0,7,11,5);
+	this.downRow6 = new HorizontalRow(0, 7, 11, 5);
 	this.downwardRows.push(this.downRow6);
-	this.downRow7 = new HorizontalRow(0,9,12,4);
+	this.downRow7 = new HorizontalRow(0, 9, 12, 4);
 	this.downwardRows.push(this.downRow7);
 
 	// function HorizontalRow (firstColumn, minIndex, maxIndex, length) {
-	
-	this.upRow1 = new HorizontalRow(0,3,0,4);
+
+	this.upRow1 = new HorizontalRow(0, 3, 0, 4);
 	this.upwardRows.push(this.upRow1);
-	this.upRow2 = new HorizontalRow(0,5,1,5);
+	this.upRow2 = new HorizontalRow(0, 5, 1, 5);
 	this.upwardRows.push(this.upRow2);
-	this.upRow3 = new HorizontalRow(0,7,2,6);
+	this.upRow3 = new HorizontalRow(0, 7, 2, 6);
 	this.upwardRows.push(this.upRow3);
-	this.upRow4 = new HorizontalRow(0,9,3,7);
+	this.upRow4 = new HorizontalRow(0, 9, 3, 7);
 	this.upwardRows.push(this.upRow4);
-	this.upRow5 = new HorizontalRow(1,10,5,6);
+	this.upRow5 = new HorizontalRow(1, 10, 5, 6);
 	this.upwardRows.push(this.upRow5);
-	this.upRow6 = new HorizontalRow(2,11,7,5);
+	this.upRow6 = new HorizontalRow(2, 11, 7, 5);
 	this.upwardRows.push(this.upRow6);
-	this.upRow7 = new HorizontalRow(3,12,9,4);
+	this.upRow7 = new HorizontalRow(3, 12, 9, 4);
 	this.upwardRows.push(this.upRow7);
 
-	this.drawBoard = function() {
+	this.drawBoard = function () {
 		this.col1.drawColumn();
 		this.col2.drawColumn();
 		this.col3.drawColumn();
@@ -678,20 +848,23 @@ function Board() {
 	this.setInitialThreeHexes = function () {
 
 		this.col2.hexes[8].raphaelHex.data("color", 2);
-		this.col2.hexes[8].raphaelHex.attr({fill: "red"});
+		this.col2.hexes[8].raphaelHex.attr({ fill: "red" });
+		this.col2.hexes[8].color = 2;
 
 		this.col4.hexes[2].raphaelHex.data("color", 0);
-		this.col4.hexes[2].raphaelHex.attr({fill: "yellow"});
+		this.col4.hexes[2].raphaelHex.attr({ fill: "yellow" });
+		this.col4.hexes[2].color = 0;
 
 		this.col6.hexes[8].raphaelHex.data("color", 4);
-		this.col6.hexes[8].raphaelHex.attr({fill: "blue"});
+		this.col6.hexes[8].raphaelHex.attr({ fill: "blue" });
+		this.col6.hexes[8].color = 4;
 	}
 
-	this.square1.click(function(evt) {
+	this.square1.click(function (evt) {
 
 		console.log("controller.hexSelected: " + controller.hexSelected);
 		if (controller.hexSelected) {
-			controller.currentHexSelected.attr({fill: (board.square1.attr('fill'))}); 
+			controller.currentHexSelected.attr({ fill: (board.square1.attr('fill')) });
 			controller.currentHexSelected.data("pendingColor", board.square1.data("color"));
 			if (controller.moved) {
 				controller.movedYellow = true;
@@ -702,18 +875,18 @@ function Board() {
 		}
 	})
 
-	this.square2.click(function(evt) {
+	this.square2.click(function (evt) {
 
 		console.log("controller.hexSelected: " + controller.hexSelected);
 		if (controller.hexSelected) {
-			controller.currentHexSelected.attr({fill: (board.square2.attr('fill'))}); 
+			controller.currentHexSelected.attr({ fill: (board.square2.attr('fill')) });
 			controller.currentHexSelected.data("pendingColor", board.square2.data("color"));
 			if (controller.moved) {
 				controller.movedYellow = true;
 			} else {
 				controller.moved = true;
 			}
-				controller.completeTurn();
+			controller.completeTurn();
 		}
 	})
 } // End of Board constructor
@@ -723,10 +896,19 @@ board.drawBoard();
 board.setInitialThreeHexes();
 
 var controller = new Controller();
+controller.mongoGameId = controller.getCookie("gameId")
+console.log("READ GAME ID FROM COOKIE: " + controller.mongoGameId);
+if (controller.mongoGameId === "") {
 
-//var button = document.getElementById("check")
-//var doneButton = document.getElementById("done")
+	//comment the next three lines when mongo is available
+	//console.log("creating a cookie");
+	//var myCookie = "gameId=100;max-age=2629746;path=/";
+	//document.cookie = myCookie;
 
-//button.addEventListener("click", controller.checkColumnViaButton, false);
-//doneButton.addEventListener("click", controller.completeTurn, false);
-
+	//uncomment the next two lines when mongo is available
+	console.log("inserting to DB");
+	controller.insertStateToDB();
+} else {
+	console.log("Getting state from DB.  Game id: " + controller.mongoGameId)
+	controller.getStateFromDB(controller.mongoGameId);
+}
