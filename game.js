@@ -199,6 +199,8 @@ function HorizontalRow(firstColumn, minIndex, maxIndex, length) {
 }
 
 function Blocked() {
+	this.blockedColumn = undefined;
+	this.blockedIndex = undefined;
 	this.middle = undefined;
 	this.above = undefined;
 	this.below = undefined;
@@ -207,6 +209,8 @@ function Blocked() {
 	this.upperLeft = undefined;
 	this.lowerLeft = undefined;
 
+	this.yBlockedColumn = undefined;
+	this.yBlockedIndex = undefined;
 	this.yMiddle = undefined;
 	this.yAbove = undefined;
 	this.yBelow = undefined;
@@ -402,14 +406,16 @@ function Controller() {
 
 	this.unBlockHex = function (hex) {
 
-		if (hex.g) {
-			hex.g.remove();
-			hex.g = undefined;
+		if (hex) {
+			if (hex.g) {
+				hex.g.remove();
+				hex.g = undefined;
+			}
+			hex.attr({ stroke: "gray" });
+			hex.attr("stroke-width", "2");
+			hex.toFront();
+			hex.click(board.columns[parseInt(hex.data("column")) - 1].clickHandler);
 		}
-		hex.attr({ stroke: "gray" });
-		hex.attr("stroke-width", "2");
-		hex.toFront();
-		hex.click(board.columns[parseInt(hex.data("column")) - 1].clickHandler);
 	}
 
 	this.blockHexes = function (c) {
@@ -464,11 +470,13 @@ function Controller() {
 		//initialize set of hexes to block to null, to allow for when selected hex is at edge of the board
 		c.above = null; c.below = null; c.upperRight = null; c.lowerRight = null; c.upperLeft = null; c.lowerLeft = null;
 
+		c.blockedColumn = column;
+		c.blockedIndex = index;
 		c.middle = controller.currentHexSelected;
 		if (index - 2 >= board.columns[column].minIndex) { c.above = board.columns[column].hexes[parseInt(index - 2)].raphaelHex; }
 		if (index + 2 <= board.columns[column].maxIndex) { c.below = board.columns[column].hexes[parseInt(index + 2)].raphaelHex; }
 		if ((column + 1 <= 6) && (index - 1 >= board.columns[column + 1].minIndex)) { c.upperRight = board.columns[column + 1].hexes[parseInt(index - 1)].raphaelHex; }
-		if ((column + 1 <= 6) && (index + 1 <= board.columns[column + 1].maxIndex)) { c.lowerRight = board.columns[column + 1].hexes[parseInt(index + 1)].raphaelHex; console.log("!!!!!!!!!!!! lower right colum: " + parseInt(column + 1) + "   index: " + parseInt(index + 1)); }
+		if ((column + 1 <= 6) && (index + 1 <= board.columns[column + 1].maxIndex)) { c.lowerRight = board.columns[column + 1].hexes[parseInt(index + 1)].raphaelHex; }
 		if ((column - 1 >= 0) && (index - 1 >= board.columns[column - 1].minIndex)) { c.upperLeft = board.columns[column - 1].hexes[parseInt(index - 1)].raphaelHex; }
 		if ((column - 1 >= 0) && (index + 1 <= board.columns[column - 1].maxIndex)) { c.lowerLeft = board.columns[column - 1].hexes[parseInt(index + 1)].raphaelHex; }
 	}
@@ -481,26 +489,15 @@ function Controller() {
 
 		var c = controller.blocked[controller.turn % 2];
 
+		c.yBlockedColumn = column;
+		c.yBlockedIndex = index;
 		c.yMiddle = controller.currentHexSelected;
-
-		if (index - 2 >= board.columns[column].minIndex) {
-			c.yAbove = board.columns[column].hexes[parseInt(index - 2)].raphaelHex;
-		}
-		if (index + 2 <= board.columns[column].maxIndex) {
-			c.yBelow = board.columns[column].hexes[parseInt(index + 2)].raphaelHex;
-		}
-		if ((column + 1 <= 6) && (index - 1 >= board.columns[column + 1].minIndex)) {
-			c.yUpperRight = board.columns[column + 1].hexes[parseInt(index - 1)].raphaelHex;
-		}
-		if ((column + 1 <= 6) && (index + 1 <= board.columns[column + 1].maxIndex)) {
-			c.yLowerRight = board.columns[column + 1].hexes[parseInt(index + 1)].raphaelHex;
-		}
-		if ((column - 1 >= 0) && (index - 1 >= board.columns[column - 1].minIndex)) {
-			c.yUpperLeft = board.columns[column - 1].hexes[parseInt(index - 1)].raphaelHex;
-		}
-		if ((column - 1 >= 0) && (index + 1 <= board.columns[column - 1].maxIndex)) {
-			c.yLowerLeft = board.columns[column - 1].hexes[parseInt(index + 1)].raphaelHex;
-		}
+		if (index - 2 >= board.columns[column].minIndex) { c.yAbove = board.columns[column].hexes[parseInt(index - 2)].raphaelHex; }
+		if (index + 2 <= board.columns[column].maxIndex) { c.yBelow = board.columns[column].hexes[parseInt(index + 2)].raphaelHex; }
+		if ((column + 1 <= 6) && (index - 1 >= board.columns[column + 1].minIndex)) { c.yUpperRight = board.columns[column + 1].hexes[parseInt(index - 1)].raphaelHex; }
+		if ((column + 1 <= 6) && (index + 1 <= board.columns[column + 1].maxIndex)) { c.yLowerRight = board.columns[column + 1].hexes[parseInt(index + 1)].raphaelHex; }
+		if ((column - 1 >= 0) && (index - 1 >= board.columns[column - 1].minIndex)) { c.yUpperLeft = board.columns[column - 1].hexes[parseInt(index - 1)].raphaelHex; }
+		if ((column - 1 >= 0) && (index + 1 <= board.columns[column - 1].maxIndex)) { c.yLowerLeft = board.columns[column - 1].hexes[parseInt(index + 1)].raphaelHex; }
 	}
 
 	this.makeSquaresBlack = function () {
@@ -652,11 +649,21 @@ function Controller() {
 		console.log("PUT URL: " + url);
 		console.log("GAME ID: " + this.mongoGameId);
 
+		var gameStatus = Object.assign(board, controller);
+
+		var statusString = JSON.stringify(gameStatus, ["columns", "hexes", "raphaelHex",
+			"data", "color", "hexInColumn", "pendingColor",
+			"attrs", "fill", "turn", "blocked", "blockedColumn", "blockedIndex", "yBlockedColumn", "yBlockedIndex"]);
+
+		console.log("###gameStatus: " + statusString)
+
+		/*
 		var jsonString = JSON.stringify(board, ["columns", "hexes", "raphaelHex",
 			"data", "color", "pendingColor",
 			"attrs", "fill"]);
 
 		console.log("jsonString: " + jsonString);
+		*/
 		invocation.open('PUT', url, true);
 		invocation.setRequestHeader('Content-type', 'application/json; charset=utf-8');
 		//withCredentials = true;
@@ -665,7 +672,7 @@ function Controller() {
 		invocation.onload = function () {
 			if (this.readyState == 4 && this.status == 200) {
 				var newBoard = JSON.parse(this.responseText);
-				console.log("updated board: " + JSON.stringify(newBoard));
+				console.log("updated status: " + JSON.stringify(newBoard));
 
 				/*newBoard.columns.forEach((cl, i) => {
 					//console.log("columns[" + i + "]:" + JSON.stringify(cl));
@@ -680,17 +687,25 @@ function Controller() {
 			}
 		};
 
-		invocation.send(jsonString);
+		invocation.send(statusString);
 	}
 
 	this.getStateFromDB = function (mongoGameId) {
 		var invocation = new XMLHttpRequest();
 		var url = 'http://localhost:8080/cfast-status/' + mongoGameId;
-		var jsonString = JSON.stringify(board, ["columns", "hexes", "raphaelHex",
+		/*var jsonString = JSON.stringify(board, ["columns", "hexes", "raphaelHex",
 			"data", "color", "pendingColor",
-			"attrs", "fill"]);
+			"attrs", "fill"]);*/
 
-		console.log("jsonString: " + jsonString);
+		var gameStatus = Object.assign(board, controller);
+
+		var statusString = JSON.stringify(gameStatus, ["columns", "hexes", "raphaelHex",
+			"data", "color", "pendingColor",
+			"attrs", "fill", "turn", "blocked"]);
+
+		console.log("###gameStatus: " + statusString)
+
+		//console.log("jsonString: " + jsonString);
 		invocation.open('GET', url, true);
 		invocation.setRequestHeader('Content-type', 'application/json; charset=utf-8');
 		//withCredentials = true;
@@ -700,6 +715,8 @@ function Controller() {
 			if (this.readyState == 4 && this.status == 200) {
 				var newBoard = JSON.parse(this.responseText);
 				console.log("updated board: " + JSON.stringify(newBoard));
+				controller.turn = newBoard.turn;
+				console.log("TURN from DB: " + controller.turn);
 				newBoard.columns.forEach((cl, i) => {
 					//console.log("columns[" + i + "]:" + JSON.stringify(cl));
 					cl.hexes.forEach((hx, j) => {
@@ -710,6 +727,12 @@ function Controller() {
 						}
 					});
 				});
+
+				// Update the text on the screen to direct the current player how to move
+				strCurrTurn = "Current Player: Player" + parseInt((controller.turn % 2) + 1) + " --> Play a "
+					+ controller.spectrum[controller.playerColors[controller.turn % 2]];
+				board.currentPlayerText.attr("text", strCurrTurn);
+				board.currentPlayerText.attr({ "fill": controller.spectrum[controller.playerColors[controller.turn % 2]] });
 			}
 		};
 
@@ -719,11 +742,22 @@ function Controller() {
 	this.insertStateToDB = function () {
 		var invocation = new XMLHttpRequest();
 		var url = 'http://localhost:8080/cfast-status/';
+		/*
 		var jsonString = JSON.stringify(board, ["columns", "hexes", "raphaelHex",
 			"data", "color", "pendingColor",
 			"attrs", "fill"]);
 
 		console.log("jsonString insert request: " + jsonString);
+		var gameStatus = Object.assign(board, controller.turn); */
+
+		var gameStatus = Object.assign(board, controller);
+
+		var statusString = JSON.stringify(gameStatus, ["columns", "hexes", "raphaelHex",
+			"data", "color", "pendingColor",
+			"attrs", "fill", "turn", "blocked"]);
+
+		console.log("###gameStatus: " + statusString)
+
 		invocation.open('POST', url, true);
 		invocation.setRequestHeader('Content-type', 'application/json; charset=utf-8');
 		//withCredentials = true;
@@ -735,6 +769,8 @@ function Controller() {
 				console.log("Inserted Board: " + JSON.stringify(newBoard));
 				controller.mongoGameId = newBoard._id;
 				console.log("###### _id: " + controller.mongoGameId);
+				controller.turn = newBoard.turn;
+				console.log("TURN from DB: " + controller.turn);
 				newBoard.columns.forEach((cl, i) => {
 					//console.log("columns[" + i + "]:" + JSON.stringify(cl));
 					cl.hexes.forEach((hx, j) => {
@@ -754,7 +790,7 @@ function Controller() {
 			console.log("READ COOKIE: " + controller.getCookie("gameId"));
 		};
 
-		invocation.send(jsonString);
+		invocation.send(statusString);
 	}
 
 
