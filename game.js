@@ -23,6 +23,14 @@ function raphaelHex(x, y, linesize) {
 	return paper.path(pathLine);
 }
 
+function onSignIn(googleUser) {
+	var profile = googleUser.getBasicProfile();
+	console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
+	console.log('Name: ' + profile.getName());
+	console.log('Image URL: ' + profile.getImageUrl());
+	console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
+}
+
 // Hexagon constructor
 function Hexagon(x, y, linesize, hexInColumn) {
 	this.x = x;
@@ -199,6 +207,8 @@ function HorizontalRow(firstColumn, minIndex, maxIndex, length) {
 }
 
 function Blocked() {
+	this.blockedColumn = undefined;
+	this.blockedIndex = undefined;
 	this.middle = undefined;
 	this.above = undefined;
 	this.below = undefined;
@@ -207,6 +217,8 @@ function Blocked() {
 	this.upperLeft = undefined;
 	this.lowerLeft = undefined;
 
+	this.yblockedColumn = undefined;
+	this.yblockedIndex = undefined;
 	this.yMiddle = undefined;
 	this.yAbove = undefined;
 	this.yBelow = undefined;
@@ -217,7 +229,7 @@ function Blocked() {
 }
 
 var boardReplacer = function (key, value) {
-	console.log("boardReplacer: " + value);
+	//console.log("boardReplacer: " + value);
 	// Filtering out properties
 	if (value instanceof Raphael) {
 		return undefined;
@@ -226,7 +238,7 @@ var boardReplacer = function (key, value) {
 }
 
 var replacer = function (key, value) {
-	console.log("replacer: " + value);
+	//console.log("replacer: " + value);
 	// Filtering out properties
 	if (value instanceof Raphael) {
 		return undefined;
@@ -402,14 +414,16 @@ function Controller() {
 
 	this.unBlockHex = function (hex) {
 
-		if (hex.g) {
-			hex.g.remove();
-			hex.g = undefined;
+		if (hex) {
+			if (hex.g) {
+				hex.g.remove();
+				hex.g = undefined;
+			}
+			hex.attr({ stroke: "gray" });
+			hex.attr("stroke-width", "2");
+			hex.toFront();
+			hex.click(board.columns[parseInt(hex.data("column")) - 1].clickHandler);
 		}
-		hex.attr({ stroke: "gray" });
-		hex.attr("stroke-width", "2");
-		hex.toFront();
-		hex.click(board.columns[parseInt(hex.data("column")) - 1].clickHandler);
 	}
 
 	this.blockHexes = function (c) {
@@ -453,54 +467,47 @@ function Controller() {
 		if (j.yLowerLeft) { this.unBlockHex(j.yLowerLeft); j.yLowerLeft = undefined; }
 
 	}
-	this.setBlocked = function () {
+	this.setBlocked = function (iTurn) {
 
 		// Identify the hexes which cannot be played and make them glow
 		var column = controller.currentHexSelected.data("column") - 1;
 		var index = controller.currentHexSelected.data("index");
 
-		var c = controller.blocked[controller.turn % 2];
+		//var c = controller.blocked[controller.turn % 2];
+		var c = controller.blocked[iTurn];
 
 		//initialize set of hexes to block to null, to allow for when selected hex is at edge of the board
 		c.above = null; c.below = null; c.upperRight = null; c.lowerRight = null; c.upperLeft = null; c.lowerLeft = null;
 
+		c.blockedColumn = column;
+		c.blockedIndex = index;
 		c.middle = controller.currentHexSelected;
 		if (index - 2 >= board.columns[column].minIndex) { c.above = board.columns[column].hexes[parseInt(index - 2)].raphaelHex; }
 		if (index + 2 <= board.columns[column].maxIndex) { c.below = board.columns[column].hexes[parseInt(index + 2)].raphaelHex; }
 		if ((column + 1 <= 6) && (index - 1 >= board.columns[column + 1].minIndex)) { c.upperRight = board.columns[column + 1].hexes[parseInt(index - 1)].raphaelHex; }
-		if ((column + 1 <= 6) && (index + 1 <= board.columns[column + 1].maxIndex)) { c.lowerRight = board.columns[column + 1].hexes[parseInt(index + 1)].raphaelHex; console.log("!!!!!!!!!!!! lower right colum: " + parseInt(column + 1) + "   index: " + parseInt(index + 1)); }
+		if ((column + 1 <= 6) && (index + 1 <= board.columns[column + 1].maxIndex)) { c.lowerRight = board.columns[column + 1].hexes[parseInt(index + 1)].raphaelHex; }
 		if ((column - 1 >= 0) && (index - 1 >= board.columns[column - 1].minIndex)) { c.upperLeft = board.columns[column - 1].hexes[parseInt(index - 1)].raphaelHex; }
 		if ((column - 1 >= 0) && (index + 1 <= board.columns[column - 1].maxIndex)) { c.lowerLeft = board.columns[column - 1].hexes[parseInt(index + 1)].raphaelHex; }
 	}
 
-	this.setYellowBlocked = function () {
+	this.setYellowBlocked = function (iTurn) {
 
 		// Identify the hexes which cannot be played and make them glow
 		var column = controller.currentHexSelected.data("column") - 1;
 		var index = controller.currentHexSelected.data("index");
 
-		var c = controller.blocked[controller.turn % 2];
+		//var c = controller.blocked[controller.turn % 2];
+		var c = controller.blocked[iTurn];
 
+		c.yblockedColumn = column;
+		c.yblockedIndex = index;
 		c.yMiddle = controller.currentHexSelected;
-
-		if (index - 2 >= board.columns[column].minIndex) {
-			c.yAbove = board.columns[column].hexes[parseInt(index - 2)].raphaelHex;
-		}
-		if (index + 2 <= board.columns[column].maxIndex) {
-			c.yBelow = board.columns[column].hexes[parseInt(index + 2)].raphaelHex;
-		}
-		if ((column + 1 <= 6) && (index - 1 >= board.columns[column + 1].minIndex)) {
-			c.yUpperRight = board.columns[column + 1].hexes[parseInt(index - 1)].raphaelHex;
-		}
-		if ((column + 1 <= 6) && (index + 1 <= board.columns[column + 1].maxIndex)) {
-			c.yLowerRight = board.columns[column + 1].hexes[parseInt(index + 1)].raphaelHex;
-		}
-		if ((column - 1 >= 0) && (index - 1 >= board.columns[column - 1].minIndex)) {
-			c.yUpperLeft = board.columns[column - 1].hexes[parseInt(index - 1)].raphaelHex;
-		}
-		if ((column - 1 >= 0) && (index + 1 <= board.columns[column - 1].maxIndex)) {
-			c.yLowerLeft = board.columns[column - 1].hexes[parseInt(index + 1)].raphaelHex;
-		}
+		if (index - 2 >= board.columns[column].minIndex) { c.yAbove = board.columns[column].hexes[parseInt(index - 2)].raphaelHex; }
+		if (index + 2 <= board.columns[column].maxIndex) { c.yBelow = board.columns[column].hexes[parseInt(index + 2)].raphaelHex; }
+		if ((column + 1 <= 6) && (index - 1 >= board.columns[column + 1].minIndex)) { c.yUpperRight = board.columns[column + 1].hexes[parseInt(index - 1)].raphaelHex; }
+		if ((column + 1 <= 6) && (index + 1 <= board.columns[column + 1].maxIndex)) { c.yLowerRight = board.columns[column + 1].hexes[parseInt(index + 1)].raphaelHex; }
+		if ((column - 1 >= 0) && (index - 1 >= board.columns[column - 1].minIndex)) { c.yUpperLeft = board.columns[column - 1].hexes[parseInt(index - 1)].raphaelHex; }
+		if ((column - 1 >= 0) && (index + 1 <= board.columns[column - 1].maxIndex)) { c.yLowerLeft = board.columns[column - 1].hexes[parseInt(index + 1)].raphaelHex; }
 	}
 
 	this.makeSquaresBlack = function () {
@@ -545,7 +552,7 @@ function Controller() {
 			board.currentPlayerText.attr("text", strCurrTurn);
 
 			// identify the hexes which should be blocked
-			controller.setBlocked();
+			controller.setBlocked(controller.turn % 2);
 
 		}
 
@@ -558,7 +565,7 @@ function Controller() {
 			var currColumn = controller.currentHexSelected.data("column") - 1;
 			var currIndex = controller.currentHexSelected.data("index");
 			board.columns[currColumn].hexes[currIndex].color = controller.currentHexSelected.data("pendingColor");
-			console.log("!!!!!!!!!!!!!!!pendingColor" + board.columns[currColumn].hexes[currIndex].color);
+			//console.log("!!!!!!!!!!!!!!!pendingColor" + board.columns[currColumn].hexes[currIndex].color);
 
 			// no need to unblock cells on first turn
 			if (controller.turn) {
@@ -585,7 +592,7 @@ function Controller() {
 
 			if (!controller.gameOver) {
 				// identify the hexes which should be blocked and make them glow
-				controller.setYellowBlocked();
+				controller.setYellowBlocked(controller.turn % 2);
 				controller.blockHexes(controller.blocked[controller.turn % 2]);
 
 				// increment to the next turn
@@ -618,7 +625,7 @@ function Controller() {
 	}
 
 	this.endGame = function (playerColor) {
-		console.log("XXXXXXXXXXXXXXXXX   IN endGame()    XXXXXXXXXXXXX");
+		//console.log("XXXXXXXXXXXXXXXXX   IN endGame()    XXXXXXXXXXXXX");
 		for (i = 0; i < board.columns.length; i++) {
 			for (j = board.columns[i].minIndex; j <= board.columns[i].maxIndex; j = j + 2) {
 				board.columns[i].hexes[j].raphaelHex.unclick(Column.clickHandler);
@@ -649,14 +656,17 @@ function Controller() {
 	this.updateStateInDB = function (gameId) {
 		var invocation = new XMLHttpRequest();
 		var url = 'http://localhost:8080/cfast-status/' + gameId;
-		console.log("PUT URL: " + url);
-		console.log("GAME ID: " + this.mongoGameId);
+		//console.log("PUT URL: " + url);
+		//console.log("GAME ID: " + this.mongoGameId);
 
-		var jsonString = JSON.stringify(board, ["columns", "hexes", "raphaelHex",
-			"data", "color", "pendingColor",
-			"attrs", "fill"]);
+		var gameStatus = Object.assign(board, controller);
 
-		console.log("jsonString: " + jsonString);
+		var statusString = JSON.stringify(gameStatus, ["columns", "hexes", "raphaelHex",
+			"data", "color", "hexInColumn", "pendingColor",
+			"attrs", "fill", "turn", "blocked", "blockedColumn", "blockedIndex", "yblockedColumn", "yblockedIndex"]);
+
+		//console.log("###gameStatus: " + statusString)
+
 		invocation.open('PUT', url, true);
 		invocation.setRequestHeader('Content-type', 'application/json; charset=utf-8');
 		//withCredentials = true;
@@ -665,7 +675,7 @@ function Controller() {
 		invocation.onload = function () {
 			if (this.readyState == 4 && this.status == 200) {
 				var newBoard = JSON.parse(this.responseText);
-				console.log("updated board: " + JSON.stringify(newBoard));
+				//console.log("updated status: " + JSON.stringify(newBoard));
 
 				/*newBoard.columns.forEach((cl, i) => {
 					//console.log("columns[" + i + "]:" + JSON.stringify(cl));
@@ -680,17 +690,22 @@ function Controller() {
 			}
 		};
 
-		invocation.send(jsonString);
+		invocation.send(statusString);
 	}
 
 	this.getStateFromDB = function (mongoGameId) {
 		var invocation = new XMLHttpRequest();
 		var url = 'http://localhost:8080/cfast-status/' + mongoGameId;
-		var jsonString = JSON.stringify(board, ["columns", "hexes", "raphaelHex",
-			"data", "color", "pendingColor",
-			"attrs", "fill"]);
 
-		console.log("jsonString: " + jsonString);
+		var gameStatus = Object.assign(board, controller);
+
+		var statusString = JSON.stringify(gameStatus, ["columns", "hexes", "raphaelHex",
+			"data", "color", "pendingColor",
+			"attrs", "fill", "turn", "blocked"]);
+
+		//console.log("###gameStatus: " + statusString)
+
+		//console.log("jsonString: " + jsonString);
 		invocation.open('GET', url, true);
 		invocation.setRequestHeader('Content-type', 'application/json; charset=utf-8');
 		//withCredentials = true;
@@ -699,7 +714,9 @@ function Controller() {
 		invocation.onload = function () {
 			if (this.readyState == 4 && this.status == 200) {
 				var newBoard = JSON.parse(this.responseText);
-				console.log("updated board: " + JSON.stringify(newBoard));
+				//console.log("updated board: " + JSON.stringify(newBoard));
+				controller.turn = newBoard.turn;
+				console.log("TURN from DB: " + controller.turn);
 				newBoard.columns.forEach((cl, i) => {
 					//console.log("columns[" + i + "]:" + JSON.stringify(cl));
 					cl.hexes.forEach((hx, j) => {
@@ -710,6 +727,24 @@ function Controller() {
 						}
 					});
 				});
+
+				// Update the text on the screen to direct the current player how to move
+				strCurrTurn = "Current Player: Player" + parseInt((controller.turn % 2) + 1) + " --> Play a "
+					+ controller.spectrum[controller.playerColors[controller.turn % 2]];
+				board.currentPlayerText.attr("text", strCurrTurn);
+				board.currentPlayerText.attr({ "fill": controller.spectrum[controller.playerColors[controller.turn % 2]] });
+
+				ind = (controller.turn - 1) % 2;
+
+				controller.currentHexSelected =
+					board.columns[newBoard.blocked[ind].blockedColumn].hexes[newBoard.blocked[ind].blockedIndex].raphaelHex;
+				controller.setBlocked(ind);
+
+				controller.currentHexSelected =
+					board.columns[newBoard.blocked[ind].yblockedColumn].hexes[newBoard.blocked[ind].yblockedIndex].raphaelHex;
+				controller.setYellowBlocked(ind);
+
+				controller.blockHexes(controller.blocked[ind]);
 			}
 		};
 
@@ -719,11 +754,15 @@ function Controller() {
 	this.insertStateToDB = function () {
 		var invocation = new XMLHttpRequest();
 		var url = 'http://localhost:8080/cfast-status/';
-		var jsonString = JSON.stringify(board, ["columns", "hexes", "raphaelHex",
-			"data", "color", "pendingColor",
-			"attrs", "fill"]);
 
-		console.log("jsonString insert request: " + jsonString);
+		var gameStatus = Object.assign(board, controller);
+
+		var statusString = JSON.stringify(gameStatus, ["columns", "hexes", "raphaelHex",
+			"data", "color", "pendingColor",
+			"attrs", "fill", "turn", "blocked"]);
+
+		//console.log("###gameStatus: " + statusString)
+
 		invocation.open('POST', url, true);
 		invocation.setRequestHeader('Content-type', 'application/json; charset=utf-8');
 		//withCredentials = true;
@@ -732,9 +771,11 @@ function Controller() {
 		invocation.onload = function () {
 			if (this.readyState == 4 && this.status == 200) {
 				var newBoard = JSON.parse(this.responseText);
-				console.log("Inserted Board: " + JSON.stringify(newBoard));
+				//console.log("Inserted Board: " + JSON.stringify(newBoard));
 				controller.mongoGameId = newBoard._id;
 				console.log("###### _id: " + controller.mongoGameId);
+				controller.turn = newBoard.turn;
+				console.log("TURN from DB: " + controller.turn);
 				newBoard.columns.forEach((cl, i) => {
 					//console.log("columns[" + i + "]:" + JSON.stringify(cl));
 					cl.hexes.forEach((hx, j) => {
@@ -754,7 +795,7 @@ function Controller() {
 			console.log("READ COOKIE: " + controller.getCookie("gameId"));
 		};
 
-		invocation.send(jsonString);
+		invocation.send(statusString);
 	}
 
 
@@ -862,7 +903,7 @@ function Board() {
 
 	this.square1.click(function (evt) {
 
-		console.log("controller.hexSelected: " + controller.hexSelected);
+		//console.log("controller.hexSelected: " + controller.hexSelected);
 		if (controller.hexSelected) {
 			controller.currentHexSelected.attr({ fill: (board.square1.attr('fill')) });
 			controller.currentHexSelected.data("pendingColor", board.square1.data("color"));
@@ -877,7 +918,7 @@ function Board() {
 
 	this.square2.click(function (evt) {
 
-		console.log("controller.hexSelected: " + controller.hexSelected);
+		//console.log("controller.hexSelected: " + controller.hexSelected);
 		if (controller.hexSelected) {
 			controller.currentHexSelected.attr({ fill: (board.square2.attr('fill')) });
 			controller.currentHexSelected.data("pendingColor", board.square2.data("color"));
