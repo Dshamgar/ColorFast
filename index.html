@@ -9,8 +9,20 @@
 <body style="background-color: black">
 	<!--button id="check">Check</button-->
 	<!--button id="done">Complete Turn</button-->
+	<div class="g-signin2" data-onsuccess="onSignIn"></div>
+	<a href="#" onclick="signOut();">Sign out</a>
+	<script>
+		function signOut() {
+			var auth2 = gapi.auth2.getAuthInstance();
+			auth2.signOut().then(function () {
+				console.log('User signed out.');
+			});
+		}
+	</script>
 	<div style="background-color:black" id="board">
 		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.js"></script>
+		<script src="https://apis.google.com/js/platform.js" async defer></script>
+		<meta name="google-signin-client_id" content="184366036771-qb1npfvg6ei15t1n177kn7ajr6tghvtb.apps.googleusercontent.com">
 		<script src="raphael.min.js"></script>
 		<script src="game.js"></script>
 	</div>
