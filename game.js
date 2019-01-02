@@ -655,7 +655,7 @@ function Controller() {
 
 	this.updateStateInDB = function (gameId) {
 		var invocation = new XMLHttpRequest();
-		var url = 'http://localhost:8080/cfast-status/' + gameId;
+		var url = 'http://dagwood:8090/cfast-status/' + gameId;
 		//console.log("PUT URL: " + url);
 		//console.log("GAME ID: " + this.mongoGameId);
 
@@ -695,7 +695,7 @@ function Controller() {
 
 	this.getStateFromDB = function (mongoGameId) {
 		var invocation = new XMLHttpRequest();
-		var url = 'http://localhost:8080/cfast-status/' + mongoGameId;
+		var url = 'http://dagwood:8090/cfast-status/' + mongoGameId;
 
 		var gameStatus = Object.assign(board, controller);
 
@@ -753,7 +753,7 @@ function Controller() {
 
 	this.insertStateToDB = function () {
 		var invocation = new XMLHttpRequest();
-		var url = 'http://localhost:8080/cfast-status/';
+		var url = 'http://dagwood:8090/cfast-status/';
 
 		var gameStatus = Object.assign(board, controller);
 
